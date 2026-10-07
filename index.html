@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Europe Packing List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: an airmail envelope. Striped edge up top, a row of four boarding-pass tabs for each departure, one checklist card below. */
+:root {
+  --paper: #eef2f8;
+  --card: #ffffff;
+  --ink: #16233d;
+  --muted: #5a6680;
+  --line: #d5dce8;
+  --red: #c4372c;
+  --blue: #23469a;
+  --packed: #2b7a52;
+  --packed-soft: #e3f2ea;
+  --stripe-gap: #ffffff;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1524; --card: #172036; --ink: #e7ecf5; --muted: #9ba7bf; --line: #2a3655;
+    --red: #ec6a5f; --blue: #8aa6f2; --packed: #5cc58f; --packed-soft: #1b3a2c; --stripe-gap: #172036;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e1524; --card: #172036; --ink: #e7ecf5; --muted: #9ba7bf; --line: #2a3655;
+  --red: #ec6a5f; --blue: #8aa6f2; --packed: #5cc58f; --packed-soft: #1b3a2c; --stripe-gap: #172036;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--body);
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.airmail {
+  height: 10px;
+  background: repeating-linear-gradient(-45deg,
+    var(--red) 0 14px, var(--stripe-gap) 14px 21px,
+    var(--blue) 21px 35px, var(--stripe-gap) 35px 42px);
+}
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 28px 56px;
+  display: grid;
+  gap: 22px;
+}
+
+header { display: grid; gap: 6px; }
+.eyebrow {
+  font: 700 12px/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+h1 {
+  margin: 0;
+  font: 800 clamp(40px, 9vw, 64px)/.95 var(--display);
+  text-transform: uppercase;
+  letter-spacing: .01em;
+  text-wrap: balance;
+}
+.sync {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sync::before {
+  content: "";
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted);
+}
+.sync[data-mode="cloud"]::before { background: var(--packed); }
+
+/* Route: four boarding-pass tabs */
+.route {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  position: relative;
+}
+.leg {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 12px 10px 10px;
+  text-align: left;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.leg::after { /* ticket perforation */
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; bottom: 30px;
+  border-top: 1.5px dashed var(--line);
+}
+.leg[aria-pressed="true"] {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 1.5px var(--blue);
+}
+.leg-label {
+  font: 600 10px/1.2 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.leg-code {
+  font: 800 30px/1 var(--display);
+  letter-spacing: .02em;
+}
+.leg[aria-pressed="true"] .leg-code { color: var(--blue); }
+.leg-city {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 12px;
+}
+.leg-count {
+  font: 500 12px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.leg.done .leg-count { color: var(--packed); font-weight: 700; }
+
+/* Checklist card */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.card-head {
+  padding: 18px 18px 14px;
+  display: grid;
+  gap: 10px;
+  border-bottom: 1.5px solid var(--line);
+}
+.head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+h2 {
+  margin: 0;
+  font: 800 28px/1.05 var(--display);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.tally {
+  font: 500 13px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--packed);
+  transition: width .3s ease;
+}
+
+.add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1.5px solid var(--line);
+}
+.add input, .add select, .edit-select {
+  padding: 10px 12px;
+  font-size: 16px; /* stops iPhone zoom on focus */
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  min-width: 0;
+}
+.add #newItem { flex: 1 1 200px; }
+.add select { flex: 0 1 150px; }
+.add #newCat { flex: 1 1 100%; }
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 18px 6px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.section-head h3 {
+  margin: 0;
+  font: 800 18px/1 var(--display);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--blue);
+}
+.section-head span {
+  font: 500 12px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.section-head.done span { color: var(--packed); font-weight: 700; }
+.edit-select { padding: 7px 8px; flex: 0 1 130px; }
+.item.editing { flex-wrap: wrap; padding-block: 12px; }
+.item.editing .edit-input { flex: 1 1 160px; }
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1.5px solid var(--blue);
+  background: var(--blue);
+  color: var(--card);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn-quiet {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.btn-quiet.warn { border-color: var(--red); color: var(--red); }
+
+ul { list-style: none; margin: 0; padding: 0; }
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 18px;
+  border-bottom: 1px solid var(--line);
+  min-height: 60px;
+}
+.item:last-child { border-bottom: 0; }
+.item.packed { background: var(--packed-soft); }
+
+.check {
+  position: relative;
+  flex: none;
+  width: 28px; height: 28px;
+}
+.check input {
+  position: absolute; inset: 0;
+  margin: 0; opacity: 0; cursor: pointer;
+}
+.check .box {
+  display: grid; place-items: center;
+  width: 100%; height: 100%;
+  border: 2px solid var(--muted);
+  border-radius: 7px;
+  pointer-events: none;
+  transition: background .15s, border-color .15s;
+}
+.check input:checked + .box { background: var(--packed); border-color: var(--packed); }
+.check .box svg { width: 16px; height: 16px; opacity: 0; }
+.check input:checked + .box svg { opacity: 1; }
+.check input:focus-visible + .box { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.packed .name { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--packed); }
+
+.stamps {
+  display: flex;
+  gap: 3px;
+  flex: none;
+}
+.stamp {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+}
+.stamp.on { background: var(--packed); border-color: var(--packed); }
+.stamp.current { outline: 1.5px solid var(--blue); outline-offset: 1px; }
+
+.actions { display: flex; gap: 6px; flex: none; }
+.icon-btn {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+.icon-btn:hover { background: var(--paper); color: var(--ink); }
+.icon-btn svg { width: 17px; height: 17px; }
+
+.edit-input {
+  flex: 1; min-width: 0;
+  padding: 7px 10px;
+  font-size: 16px;
+  border: 1.5px solid var(--blue);
+  border-radius: 7px;
+  background: var(--paper);
+}
+
+.empty {
+  padding: 28px 18px;
+  color: var(--muted);
+  text-align: center;
+}
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1.5px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+.legend { display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 520px) {
+  .leg { padding: 10px 8px 8px; }
+  .leg-code { font-size: 24px; }
+  .leg-label { font-size: 9px; letter-spacing: .06em; }
+  .leg-city { font-size: 12px; }
+  .stamps { display: none; }
+  .item { padding-left: 14px; gap: 10px; }
+  .card-head, .add, .foot { padding-inline: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+
+<div class="airmail" aria-hidden="true"></div>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Par avion · Europe 2026</div>
+    <h1>Europe Packing List</h1>
+    <div class="sync" id="sync" data-mode="local">Connecting…</div>
+  </header>
+
+  <nav class="route" id="route" aria-label="Departures"></nav>
+
+  <section class="card" aria-labelledby="stopTitle">
+    <div class="card-head">
+      <div class="head-row">
+        <h2 id="stopTitle">Leaving Montréal</h2>
+        <span class="tally" id="tally">0 of 0 packed</span>
+      </div>
+      <div class="bar" aria-hidden="true"><span id="barFill"></span></div>
+    </div>
+
+    <form class="add" id="addForm" autocomplete="off">
+      <input id="newItem" type="text" placeholder="Add an item, e.g. sunglasses" maxlength="80" aria-label="New item">
+      <select id="newItemCat" aria-label="Section"></select>
+      <button class="btn" type="submit">Add</button>
+      <input id="newCat" type="text" placeholder="Name the new section, e.g. Accessories" maxlength="30" aria-label="New section name" hidden>
+    </form>
+
+    <ul id="list"></ul>
+
+    <div class="foot">
+      <span class="legend" id="legend">Dots show each stop: YMQ · AMS · PAR · BCN</span>
+      <button class="btn-quiet" id="resetBtn" type="button">Uncheck all for this stop</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const STOPS = [
+    { id: "yul", code: "YMQ", city: "Montréal" },
+    { id: "ams", code: "AMS", city: "Amsterdam" },
+    { id: "par", code: "PAR", city: "Paris" },
+    { id: "bcn", code: "BCN", city: "Barcelona" },
+  ];
+  // Used only when the page is opened as a standalone file (no sync available).
+  const STARTER = {
+    Pants: ["Grey jeans","Blue jeans","Cheetah","Silk","Linen"],
+    Tops: ["Fur vest","Baggy shoulder","Brown shawl","Cheetah","Polka dot tank","Silk open-back","Mock neck","Black tank","Lace top","Tube top","Pajamas x2"],
+    Shoes: ["Sambas","Black boots"],
+    Jackets: ["Leather jacket"],
+    Electronics: ["Phone charger","Laptop","Laptop charger","Adapter","Portable charger","AirPods","Headphones","Headphones charger","Hair curler"],
+    Personal: ["Toiletries","Makeup","Brush","Purse","Everyday bag","Passport","Meds"],
+  };
+  const DEFAULT_CAT = "Other";
+  const NEW_CAT = "__new__";
+  const LOCAL_KEY = "europe-packing-v2";
+  const TAB_KEY = "europe-packing-tab";
+
+  const $ = (id) => document.getElementById(id);
+  const els = { route: $("route"), list: $("list"), title: $("stopTitle"), tally: $("tally"),
+    bar: $("barFill"), form: $("addForm"), input: $("newItem"), catSelect: $("newItemCat"), newCat: $("newCat"),
+    reset: $("resetBtn"), sync: $("sync") };
+
+  const ICON_CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--card)"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+  const ICON_EDIT = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg>';
+  const ICON_DEL = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>';
+
+  const state = {
+    items: [],
+    active: "yul",
+    mode: "loading", // loading | cloud | local
+    editingId: null,
+    editDraft: "",
+    editCat: "",
+    confirmDelete: null,
+    confirmReset: false,
+    lastCat: "",
+  };
+
+  try { const t = localStorage.getItem(TAB_KEY); if (STOPS.some(s => s.id === t)) state.active = t; } catch (e) {}
+
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const stopOf = (id) => STOPS.find(s => s.id === id);
+  const clean = (items) => (Array.isArray(items) ? items : [])
+    .filter(i => i && typeof i.name === "string")
+    .map(i => ({ id: String(i.id || uid()), name: i.name.slice(0, 80),
+      category: (typeof i.category === "string" && i.category.trim()) ? i.category.trim().slice(0, 30) : DEFAULT_CAT,
+      checks: Object.assign({}, i.checks) }));
+  const categories = () => [...new Set(state.items.map(i => i.category))];
+
+  /* ---------- persistence ---------- */
+  let docRef = null, writing = false, pending = false, saveTimer = null;
+
+  function save() {
+    if (state.mode === "local") {
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state.items)); } catch (e) {}
+      return;
+    }
+    if (state.mode !== "cloud") return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { saveTimer = null; flush(); }, 350);
+  }
+  async function flush() {
+    if (writing) { pending = true; return; }
+    writing = true;
+    try {
+      await docRef.set({ items: state.items.map(i => ({ id: i.id, name: i.name, category: i.category, checks: i.checks })) });
+      setSync("cloud", "Synced across your devices");
+    } catch (e) {
+      if (e && e.code === "unavailable") { setTimeout(flush, 800 + Math.random() * 800); }
+      else setSync("local", "Couldn't save just now. Check your connection and try again.");
+    } finally {
+      writing = false;
+      if (pending) { pending = false; flush(); }
+    }
+  }
+  function busy() { return writing || pending || saveTimer !== null; }
+
+  function setSync(mode, text) { els.sync.dataset.mode = mode; els.sync.textContent = text; }
+
+  function startLocal() {
+    state.mode = "local";
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null"); } catch (e) {}
+    state.items = saved ? clean(saved) : Object.entries(STARTER).flatMap(([cat, names]) => names.map(n => ({ id: uid(), name: n, category: cat, checks: {} })));
+    setSync("local", "Saved in this browser only");
+    render();
+  }
+
+  async function init() {
+    render();
+    const c = window.claude;
+    if (!c || typeof c.use !== "function") return startLocal();
+    let db = null;
+    try { db = await c.use("db"); } catch (e) { db = null; }
+    if (!db) return startLocal();
+    docRef = db.doc("trip/packing");
+    state.mode = "cloud";
+    setSync("cloud", "Syncing…");
+    docRef.onSnapshot((snap) => {
+      if (busy()) return; // our own write is in flight; it will echo back
+      state.items = snap.exists ? clean(snap.data().items) : [];
+      setSync("cloud", "Synced across your devices");
+      render();
+    }, () => setSync("local", "Sync stopped. Reload the page to reconnect."));
+  }
+
+  /* ---------- actions ---------- */
+  // Keep items of one section together in the array: insert after that section's last item.
+  function insertInSection(item) {
+    let at = -1;
+    state.items.forEach((i, idx) => { if (i.category === item.category) at = idx; });
+    if (at === -1) state.items.push(item); else state.items.splice(at + 1, 0, item);
+  }
+  function toggle(id, on) {
+    const it = state.items.find(i => i.id === id); if (!it) return;
+    it.checks = Object.assign({}, it.checks, { [state.active]: on });
+    render(); save();
+  }
+  function addItem(name, cat) {
+    name = name.trim(); cat = (cat || "").trim().slice(0, 30) || DEFAULT_CAT;
+    if (!name) return false;
+    insertInSection({ id: uid(), name: name.slice(0, 80), category: cat, checks: {} });
+    state.lastCat = cat;
+    render(); save();
+    return true;
+  }
+  function saveEdit(id) {
+    const it = state.items.find(i => i.id === id);
+    const name = state.editDraft.trim();
+    const cat = state.editCat;
+    state.editingId = null;
+    if (it) {
+      let changed = false;
+      if (name && name !== it.name) { it.name = name.slice(0, 80); changed = true; }
+      if (cat && cat !== it.category) {
+        state.items = state.items.filter(i => i.id !== id);
+        it.category = cat;
+        insertInSection(it);
+        changed = true;
+      }
+      if (changed) save();
+    }
+    render();
+  }
+  function remove(id) {
+    state.items = state.items.filter(i => i.id !== id);
+    state.confirmDelete = null;
+    render(); save();
+  }
+  function resetStop() {
+    state.items.forEach(i => { i.checks = Object.assign({}, i.checks, { [state.active]: false }); });
+    state.confirmReset = false;
+    render(); save();
+  }
+  function setActive(id) {
+    state.active = id; state.confirmReset = false; state.confirmDelete = null;
+    try { localStorage.setItem(TAB_KEY, id); } catch (e) {}
+    render();
+  }
+
+  /* ---------- render ---------- */
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  function renderCatSelect() {
+    const cats = categories();
+    const current = els.catSelect.value;
+    const want = cats.includes(current) || current === NEW_CAT ? current
+      : (cats.includes(state.lastCat) ? state.lastCat : (cats[0] || NEW_CAT));
+    els.catSelect.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")
+      + `<option value="${NEW_CAT}">New section…</option>`;
+    els.catSelect.value = want;
+    els.newCat.hidden = els.catSelect.value !== NEW_CAT;
+  }
+
+  function itemRow(it, stop) {
+    const on = !!(it.checks && it.checks[state.active]);
+    if (state.editingId === it.id) {
+      const opts = categories().map(c => `<option value="${esc(c)}"${c === state.editCat ? " selected" : ""}>${esc(c)}</option>`).join("");
+      return `<li class="item editing" data-id="${it.id}">
+        <input class="edit-input" id="edit-${it.id}" type="text" maxlength="80" value="${esc(state.editDraft)}" aria-label="Item name">
+        <select class="edit-select" id="editcat-${it.id}" aria-label="Section">${opts}</select>
+        <div class="actions">
+          <button class="btn-quiet" type="button" data-act="save">Save</button>
+          <button class="btn-quiet" type="button" data-act="cancel">Cancel</button>
+        </div></li>`;
+    }
+    const stamps = STOPS.map(s => `<span class="stamp${it.checks && it.checks[s.id] ? " on" : ""}${s.id === state.active ? " current" : ""}" title="${s.city}: ${it.checks && it.checks[s.id] ? "packed" : "not packed"}"></span>`).join("");
+    const confirming = state.confirmDelete === it.id;
+    return `<li class="item${on ? " packed" : ""}" data-id="${it.id}">
+      <span class="check"><input type="checkbox" id="chk-${it.id}" ${on ? "checked" : ""} aria-label="${esc(it.name)} packed for ${stop.city}"><span class="box">${ICON_CHECK}</span></span>
+      <label class="name" for="chk-${it.id}">${esc(it.name)}</label>
+      <span class="stamps" aria-hidden="true">${stamps}</span>
+      <div class="actions">
+        ${confirming
+          ? `<button class="btn-quiet warn" type="button" data-act="confirm-del">Remove</button><button class="btn-quiet" type="button" data-act="keep">Keep</button>`
+          : `<button class="icon-btn" type="button" data-act="edit" aria-label="Edit ${esc(it.name)}">${ICON_EDIT}</button>
+             <button class="icon-btn" type="button" data-act="del" aria-label="Remove ${esc(it.name)}">${ICON_DEL}</button>`}
+      </div></li>`;
+  }
+
+  function render() {
+    const total = state.items.length;
+    const countFor = (sid, list = state.items) => list.filter(i => i.checks && i.checks[sid]).length;
+
+    els.route.innerHTML = STOPS.map((s, idx) => {
+      const n = countFor(s.id);
+      const done = total > 0 && n === total;
+      return `<button class="leg${done ? " done" : ""}" type="button" data-stop="${s.id}" aria-pressed="${s.id === state.active}">
+        <span class="leg-label">Stop ${idx + 1} · Depart</span>
+        <span class="leg-code">${s.code}</span>
+        <span class="leg-city">${s.city}</span>
+        <span class="leg-count">${done ? "All packed" : `${n}/${total}`}</span>
+      </button>`;
+    }).join("");
+
+    const stop = stopOf(state.active);
+    const packed = countFor(state.active);
+    els.title.textContent = `Leaving ${stop.city}`;
+    els.tally.textContent = state.mode === "loading" ? "Loading…" : `${packed} of ${total} packed`;
+    els.bar.style.width = total ? `${(packed / total) * 100}%` : "0";
+
+    if (state.mode === "loading") {
+      els.list.innerHTML = `<li class="empty">Loading your list…</li>`;
+    } else if (!total) {
+      els.list.innerHTML = `<li class="empty">Your list is empty. Add your first item above.</li>`;
+    } else {
+      els.list.innerHTML = categories().map(cat => {
+        const group = state.items.filter(i => i.category === cat);
+        const n = countFor(state.active, group);
+        const done = n === group.length;
+        return `<li class="section-head${done ? " done" : ""}"><h3>${esc(cat)}</h3><span>${done ? "All packed" : `${n}/${group.length}`}</span></li>`
+          + group.map(it => itemRow(it, stop)).join("");
+      }).join("");
+    }
+
+    renderCatSelect();
+    els.reset.textContent = state.confirmReset ? `Yes, uncheck all for ${stop.city}` : "Uncheck all for this stop";
+    els.reset.classList.toggle("warn", state.confirmReset);
+    els.reset.disabled = !total;
+    els.form.querySelector("button").disabled = state.mode === "loading";
+
+    if (state.editingId) {
+      const inp = document.getElementById("edit-" + state.editingId);
+      if (inp && !inp.dataset.focused) { inp.dataset.focused = "1"; inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }
+  }
+
+  /* ---------- events ---------- */
+  els.route.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-stop]"); if (b) setActive(b.dataset.stop);
+  });
+  els.catSelect.addEventListener("change", () => {
+    els.newCat.hidden = els.catSelect.value !== NEW_CAT;
+    if (!els.newCat.hidden) els.newCat.focus();
+  });
+  els.form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (state.mode === "loading") return;
+    const isNew = els.catSelect.value === NEW_CAT;
+    const cat = isNew ? els.newCat.value : els.catSelect.value;
+    if (isNew && !cat.trim()) { els.newCat.focus(); return; }
+    if (addItem(els.input.value, cat)) {
+      els.input.value = "";
+      if (isNew) { els.newCat.value = ""; els.catSelect.value = cat.trim(); els.newCat.hidden = true; }
+      renderCatSelect();
+      els.input.focus();
+    }
+  });
+  els.list.addEventListener("change", (e) => {
+    if (e.target.type === "checkbox") toggle(e.target.closest("[data-id]").dataset.id, e.target.checked);
+    if (e.target.classList.contains("edit-select")) state.editCat = e.target.value;
+  });
+  els.list.addEventListener("input", (e) => {
+    if (e.target.classList.contains("edit-input")) state.editDraft = e.target.value;
+  });
+  els.list.addEventListener("keydown", (e) => {
+    if (!e.target.classList.contains("edit-input")) return;
+    if (e.key === "Enter") { e.preventDefault(); state.editDraft = e.target.value; saveEdit(state.editingId); }
+    if (e.key === "Escape") { state.editingId = null; render(); }
+  });
+  els.list.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const id = b.closest("[data-id]").dataset.id;
+    const it = state.items.find(i => i.id === id);
+    switch (b.dataset.act) {
+      case "edit":
+        state.editingId = id; state.editDraft = it ? it.name : ""; state.editCat = it ? it.category : "";
+        state.confirmDelete = null; render(); break;
+      case "save": saveEdit(id); break;
+      case "cancel": state.editingId = null; render(); break;
+      case "del": state.confirmDelete = id; render(); break;
+      case "keep": state.confirmDelete = null; render(); break;
+      case "confirm-del": remove(id); break;
+    }
+  });
+  els.reset.addEventListener("click", () => {
+    if (state.confirmReset) resetStop();
+    else { state.confirmReset = true; render(); }
+  });
+
+  init();
+})();
+</script>
+
+</body>
+</html>
